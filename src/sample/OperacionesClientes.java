@@ -16,13 +16,13 @@ public class OperacionesClientes {
         this.connection = conn;
     }
 
-    public Cliente getCliente(int id){
+    public Cliente getCliente(String nombres){
         int clienteId = 0;
         String nombre = "", apellidos = "", direccion = "";
 
-        String query = "SELECT clienteid, nombre, apellidos, direccion " +
-                "FROM cliente " +
-                "WHERE clienteID = " + id;
+        String query = "SELECT * "+
+                "FROM cliente"+
+                " WHERE nombre='"+ nombres +"'" ;
 
         try {
             Statement stmt = connection.createStatement();
@@ -30,10 +30,10 @@ public class OperacionesClientes {
 
             if (rs.next()) {
                 clienteId = rs.getInt("clienteid");
-                nombre = rs.getString("nombre");
-                apellidos = rs.getString("apellidos");
-                direccion = rs.getString("direccion");
-            }
+            nombre = rs.getString("nombre");
+            apellidos = rs.getString("apellidos");
+            direccion = rs.getString("direccion");
+        }
 
             //System.out.println(clienteId + ", " + nombre + " " + apellidos + ", " + direccion);
 
@@ -66,7 +66,7 @@ public class OperacionesClientes {
                 clienteId = rs.getInt("clienteid");
                 nombre = rs.getString("nombre");
                 apellidos = rs.getString("apellidos");
-                String full = nombre + " " + apellidos;
+                String full = clienteId+" .- "+nombre + " " + apellidos;
                 items.add(full);
             }
             return items;
@@ -132,6 +132,26 @@ public class OperacionesClientes {
         }
 
         return numRegs;
+    }
+
+    public int updateCliente(int id, String nombre,String apellidos, String direccion){
+        String query = "update cliente " +
+                "set  nombre='"+ nombre +"', apellidos='"+apellidos+"',direccion='"+direccion+"'" +
+                "where  clienteID= "+id;
+        int RegNum =0;
+
+        try {
+            Statement stmt = connection.createStatement();
+            RegNum = stmt.executeUpdate(query);
+            System.out.println("Registros afectados: " + RegNum);
+        }
+        catch (java.sql.SQLException ex){
+            ex.printStackTrace();
+            System.out.println("SQLException:␣" + ex.getMessage());
+            System.out.println("SQLState:␣" + ex.getSQLState());
+            System.out.println("VendorError:␣" + ex.getErrorCode());
+        }
+        return RegNum;
     }
 }
 
