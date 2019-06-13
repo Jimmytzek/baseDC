@@ -1,12 +1,16 @@
 package sample;
 
 import javafx.application.Application;
+import javafx.beans.Observable;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
@@ -18,15 +22,31 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
+import javax.security.auth.callback.Callback;
 import java.sql.SQLException;
+import java.util.ArrayList;
 
 public class Main extends Application {
-
+//atributo de conexión
+    private ConexionMySQL accesoBD = null;
+    private Alert alert = new Alert(Alert.AlertType.INFORMATION);
     @Override
     public void start(Stage primaryStage) throws Exception{
             BorderPane root = new BorderPane();
         primaryStage.setTitle("Hello World");
 
+        //conexion a la base de datos
+        this.accesoBD = null;
+        try {
+            this.accesoBD = new ConexionMySQL();
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Information Dialog");
+            alert.setHeaderText(null);
+            alert.setContentText("Conexión exitosa a la base de datos!");
+            alert.showAndWait();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
 
 
         HBox BarraSuperior = TitiloPrincipal();
@@ -108,20 +128,21 @@ public class Main extends Application {
                 String var = mostar.getText().toString();
                 String var2 = mostar2.getText().toString();
                 String var3 = mostar3.getText().toString();
+                Alert alert2 = new Alert(Alert.AlertType.INFORMATION);
+                alert2.setTitle("Information Dialog");
+                alert2.setHeaderText(null);
 
-                ConexionMySQL accesoBD = null;
-                try {
-                    accesoBD = new ConexionMySQL();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
 
                 if (var.trim().length() > 0) {
                     OperacionesClientes opCliente = new OperacionesClientes(accesoBD.getConnection());
                     opCliente.insertCliente(var, var2, var3);
+                    alert2.setContentText("Opereción Exitosa!");
+                    alert2.showAndWait();
                 }
                 else {
-                    System.out.println("Nose pudo insertar usuario");
+                    System.out.println("No se pudo insertar usuario");
+                    alert2.setContentText("No se realizo la inserción!");
+                    alert2.showAndWait();
                 }
             }
         });
@@ -129,12 +150,7 @@ public class Main extends Application {
             @Override
             public void handle(MouseEvent mouseEvent) {
 
-                ConexionMySQL accesoBD = null;
-                try {
-                    accesoBD = new ConexionMySQL();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
+
 
                 OperacionesClientes bus = new OperacionesClientes(accesoBD.getConnection());
 
@@ -143,7 +159,7 @@ public class Main extends Application {
 
                 lvList.setItems(items);
                 lvList.setMaxHeight(Control.USE_PREF_SIZE);
-                grid.add(lvList,1,4);
+                grid.add(lvList,1,4,4,4);
 
             }
         });
@@ -151,65 +167,111 @@ public class Main extends Application {
             @Override
             public void handle(MouseEvent mouseEvent) {
 
-                int jml = Integer.parseInt(mostar4.getText());
+                if(mostar4.getText().trim().length() > 0) {
+                    int jml = Integer.parseInt(mostar4.getText());
+                    OperacionesClientes Elimi = new OperacionesClientes(accesoBD.getConnection());
+                    int s = Elimi.deleteCliente(jml);
 
-                ConexionMySQL accesoBD = null;
-                try {
-                    accesoBD = new ConexionMySQL();
-                } catch (SQLException e) {
-                    e.printStackTrace();
+                    Elimi.deleteCliente(jml);
+                    alert.setTitle("Eliminar");
+                    alert.setHeaderText("Eliminación Exitosa!!");
+                    alert.showAndWait();
                 }
+                else {
+                    alert.setTitle("Eliminar");
+                    alert.setHeaderText("Eliminación Fallida!!");
+                    alert.showAndWait();
 
-                OperacionesClientes Elimi = new OperacionesClientes(accesoBD.getConnection());
-                int s  = Elimi.deleteCliente(jml);
-
-                Elimi.deleteCliente(jml);
+                }
 
 
 
             }
         });
-        buscar.setOnMouseClicked(new EventHandler<MouseEvent>() {
+        buscar.setOnMouseClicked( new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent mouseEvent) {
-                String var = mostar.getText().toString();
+                String var = mostar.getText();
 
-                ConexionMySQL accesoBD = null;
-                try {
-                    accesoBD = new ConexionMySQL();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
 
                 if (var.trim().length() > 0) {
                     OperacionesClientes buscar = new OperacionesClientes(accesoBD.getConnection());
+                    ArrayList<Cliente> arrayList;
+                    arrayList = buscar.getClientes(var);
+                    TableView tab = new TableView();
+                    TableColumn idNombre = new TableColumn("clienteId");
+                    idNombre.setCellValueFactory(new PropertyValueFactory<Cliente,String>("clienteId"));
+                    TableColumn colNombre = new TableColumn("Nombre");
+                    colNombre.setCellValueFactory(new PropertyValueFactory<Cliente,String>("Nombre"));
+                    TableColumn colApellido = new TableColumn ("apellidos");
+                    colApellido.setCellValueFactory(new PropertyValueFactory<Cliente, String>("apellidos"));
+                    TableColumn colDireccion = new TableColumn ("Direccion");
+                    colDireccion.setCellValueFactory(new PropertyValueFactory<Cliente,String>("direccion"));
 
-                    buscar.getCliente(var);
+                    tab.getColumns().addAll(idNombre,colNombre,colApellido,colDireccion);
+
+
+                    ObservableList<Cliente> list = FXCollections.observableArrayList();
+                    list.removeAll();
+                    list.addAll(arrayList);
+                    tab.setItems(list);
+                    grid.add(tab,1,4,4,4);
+
+                    tab.getSelectionModel().selectedItemProperty().addListener(
+                            new ChangeListener<Cliente>(){
+                                @Override
+                                public void changed(ObservableValue<? extends Cliente> observableValue, Cliente s, Cliente t1) {
+                                    mostar4.setText(String.valueOf(t1.getClienteId()));
+                                    mostar.setText(String.valueOf(t1.getNombre()));
+                                    mostar2.setText(String.valueOf(t1.getApellidos()));
+                                    mostar3.setText(String.valueOf(t1.getDireccion()));
+
+                                }
+                            });
+
+
+                   /* buscar.getCliente(var);
                     Cliente regCliente = buscar.getCliente(var);
-                    Label usu = new Label("Nombre: "+ regCliente.getNombre()+" Apellido: "+regCliente.getApellidos()+" Dirección:  "+regCliente.getDireccion());
-                    grid.add(usu,1,5,4,5);
+                    mostar2.setText(regCliente.getApellidos());
+                    mostar3.setText(regCliente.getDireccion());
+                    mostar4.setText(String.valueOf(regCliente.getClienteId()));*/
+                    alert.setTitle("Busqueda");
+                    alert.setHeaderText("Busqueda Exitosa!!");
+                    alert.showAndWait();
+
+
                 }
                 else {
-                    System.out.println("No se pudo insertar usuario");
+                    alert.setTitle("Busqueda");
+                    alert.setHeaderText("Busqueda Fallida!!");
+                    alert.showAndWait();
                 }
+
+
             }
         });
         update.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent mouseEvent) {
-                String var = mostar.getText().toString();
-                String var2 = mostar2.getText().toString();
-                String var3 = mostar3.getText().toString();
-                int jml = Integer.parseInt(mostar4.getText());
-                ConexionMySQL accesoBD = null;
-                try {
-                    accesoBD = new ConexionMySQL();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-                OperacionesClientes edit = new OperacionesClientes(accesoBD.getConnection());
-                edit.updateCliente(jml,var,var2,var3);
 
+                if (mostar.getText().trim().length() > 0) {
+                    String var = mostar.getText().toString();
+                    String var2 = mostar2.getText().toString();
+                    String var3 = mostar3.getText().toString();
+                    int jml = Integer.parseInt(mostar4.getText());
+
+                    OperacionesClientes edit = new OperacionesClientes(accesoBD.getConnection());
+                    edit.updateCliente(jml, var, var2, var3);
+                    alert.setTitle("Update");
+                    alert.setHeaderText("Update Exitoso!!");
+                    alert.showAndWait();
+                }
+                else {
+                    alert.setTitle("Update");
+                    alert.setHeaderText("Update Fallido!!");
+                    alert.showAndWait();
+
+                }
 
             }
         });

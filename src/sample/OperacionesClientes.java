@@ -1,7 +1,12 @@
 package sample;
 import javafx.beans.Observable;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.scene.control.Alert;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -17,8 +22,8 @@ public class OperacionesClientes {
     }
 
     public Cliente getCliente(String nombres){
-        int clienteId = 0;
-        String nombre = "", apellidos = "", direccion = "";
+        IntegerProperty clienteId = new SimpleIntegerProperty(0);
+        StringProperty nombre =  new SimpleStringProperty(""), apellidos =  new SimpleStringProperty(""), direccion =  new SimpleStringProperty("");
 
         String query = "SELECT * "+
                 "FROM cliente"+
@@ -29,11 +34,11 @@ public class OperacionesClientes {
             ResultSet rs = stmt.executeQuery(query);
 
             if (rs.next()) {
-                clienteId = rs.getInt("clienteid");
-            nombre = rs.getString("nombre");
-            apellidos = rs.getString("apellidos");
-            direccion = rs.getString("direccion");
-        }
+                clienteId = new SimpleIntegerProperty( rs.getInt("clienteid"));
+                nombre = new SimpleStringProperty(rs.getString("nombre"));
+                apellidos = new SimpleStringProperty(rs.getString("apellidos"));
+                direccion = new SimpleStringProperty(rs.getString("direccion"));
+            }
 
             //System.out.println(clienteId + ", " + nombre + " " + apellidos + ", " + direccion);
 
@@ -66,6 +71,7 @@ public class OperacionesClientes {
                 clienteId = rs.getInt("clienteid");
                 nombre = rs.getString("nombre");
                 apellidos = rs.getString("apellidos");
+
                 String full = clienteId+" .- "+nombre + " " + apellidos;
                 items.add(full);
             }
@@ -81,6 +87,41 @@ public class OperacionesClientes {
             return null;
         }
 
+
+
+    }
+
+    public ArrayList<Cliente> getClientes(String NombresC) {
+
+        String query = "SELECT clienteid,nombre,apellidos,direccion " +
+                "FROM cliente " +
+                "WHERE nombre= '" + NombresC + "'";
+
+        try {
+            Statement stmt = connection.createStatement();
+            ResultSet rs = stmt.executeQuery(query);
+
+            ArrayList<Cliente> AListCliente = new ArrayList<>();
+            while (rs.next()) {
+                IntegerProperty clienteId = new SimpleIntegerProperty( rs.getInt("clienteid"));
+               StringProperty nombre = new SimpleStringProperty( rs.getString("nombre"));
+                StringProperty apellidos = new SimpleStringProperty( rs.getString("apellidos"));
+                StringProperty direccion = new SimpleStringProperty( rs.getString("direccion"));
+                AListCliente.add(new Cliente(clienteId , nombre, apellidos, direccion));
+
+
+            }
+            return AListCliente;
+        }
+        catch (java.sql.SQLException ex){
+
+            ex.printStackTrace();
+            System.out.println("SQLException:_"+ ex.getMessage());
+            System.out.println("SQLState:_" + ex.getSQLState());
+            System.out.println("VendorError:_" + ex.getErrorCode());
+
+            return null;
+        }
 
 
     }
@@ -144,6 +185,12 @@ public class OperacionesClientes {
             Statement stmt = connection.createStatement();
             RegNum = stmt.executeUpdate(query);
             System.out.println("Registros afectados: " + RegNum);
+            Alert alert3 = new Alert(Alert.AlertType.INFORMATION);
+            alert3.setTitle("Information Dialog");
+            alert3.setHeaderText(null);
+            alert3.setContentText("Update exitoso!!!");
+            alert3.showAndWait();
+
         }
         catch (java.sql.SQLException ex){
             ex.printStackTrace();

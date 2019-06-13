@@ -1,41 +1,68 @@
 package sample;
 
-public class Cliente {
-    private int clienteId;
-    private String nombre;
-    private String apellidos;
-    private String direccion;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.StringProperty;
 
-    public Cliente(int clienteId, String nombre, String apellidos, String direccion) {
+public class Cliente {
+    private IntegerProperty clienteId;
+    private  StringProperty nombre;
+    private  StringProperty apellidos;
+    private StringProperty direccion;
+
+    public Cliente(IntegerProperty clienteId, StringProperty nombre, StringProperty apellidos, StringProperty direccion) {
         this.clienteId = clienteId;
         this.nombre = nombre;
         this.apellidos = apellidos;
         this.direccion = direccion;
     }
+    public int getClienteId() {
+        return clienteId.get();
+    }
+
+    public IntegerProperty clienteIdProperty() {
+        return clienteId;
+    }
 
     public String getNombre() {
+        return nombre.get();
+    }
+
+    public StringProperty nombreProperty() {
         return nombre;
     }
 
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
+    public String getApellidos() {
+        return apellidos.get();
     }
 
-    public String getApellidos() {
+    public StringProperty apellidosProperty() {
         return apellidos;
     }
 
-    public void setApellidos(String apellidos) {
-        this.apellidos = apellidos;
+    public String getDireccion() {
+        return direccion.get();
     }
 
-    public String getDireccion() {
+    public StringProperty direccionProperty() {
         return direccion;
     }
 
-    public void setDireccion(String direccion) {
-        this.direccion = direccion;
+    public void setClienteId(int clienteId) {
+        this.clienteId.set(clienteId);
     }
+
+    public void setNombre(String nombre) {
+        this.nombre.set(nombre);
+    }
+
+    public void setApellidos(String apellidos) {
+        this.apellidos.set(apellidos);
+    }
+
+    public void setDireccion(String direccion) {
+        this.direccion.set(direccion);
+    }
+
 
     @Override
     public String toString() {
